@@ -13,7 +13,7 @@ import axios from 'axios'
 
 // Set axios defaults for cross-origin sessions
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = '/api'; // Use Vite proxy for session cookies to work head scripts and deps h
+axios.defaults.baseURL = '/api'; // Use Vite proxy for session cookies to work
 
 function App() {
   const [user, setUser] = useState(null);
