@@ -10,10 +10,11 @@ import ManageAccess from './pages/ManageAccess'
 import ManageStudents from './pages/ManageStudents'
 import Navbar from './components/Navbar'
 import axios from 'axios'
+import { API_BASE_URL } from './pages/ClientServer'
 
 // Set axios defaults for cross-origin sessions
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = '/api'; // Use Vite proxy for session cookies to work
+axios.defaults.baseURL = API_BASE_URL;
 
 function App() {
   const [user, setUser] = useState(null);

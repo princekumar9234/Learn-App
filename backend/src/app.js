@@ -14,10 +14,33 @@ const app = express();
 // ─── Trust Proxy (Render / Heroku) ───────────────────────────────────────────
 app.set('trust proxy', 1);
 
-// ─── Core Middleware ──────────────────────────────────────────────────────────
+const rawFrontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.trim().replace(/\/$/, '') : '';
+
+const allowedOrigins = [
+    'https://learn-app-ruby.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:4173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173'
+];
+
+if (rawFrontendUrl && !allowedOrigins.includes(rawFrontendUrl)) {
+    allowedOrigins.push(rawFrontendUrl);
+}
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    credentials: true
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        const cleanOrigin = origin.trim().replace(/\/$/, '');
+        if (allowedOrigins.includes(cleanOrigin) || cleanOrigin.includes('vercel.app') || cleanOrigin.includes('railway.app')) {
+            return callback(null, true);
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(express.json({ limit: '100mb' }));
@@ -34,6 +57,8 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // ─── Session ──────────────────────────────────────────────────────────────────
+const isProduction = process.env.NODE_ENV === 'production' || !!process.env.FRONTEND_URL || !!process.env.RAILWAY_ENVIRONMENT;
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'devsecretkey',
     resave: false,
@@ -51,9 +76,9 @@ app.use(session({
         ttl: 14 * 24 * 60 * 60 // 14 days
     }),
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 1000 * 60 * 60 * 24 // 1 day
     }
 }));
