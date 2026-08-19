@@ -44,15 +44,18 @@ if (!process.env.MONGO_URI) {
 app.locals.useCloudinary = useCloudinary;
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-async function startServer() {
-  console.log(`Attempting to connect to database...`);
-  await connectDB();
-  await seedDefaultAdmin();
+if (require.main === module) {
+  async function startServer() {
+    console.log(`Attempting to connect to database...`);
+    await connectDB();
+    await seedDefaultAdmin();
 
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
+  startServer();
 }
 
-startServer();
+module.exports = app;
