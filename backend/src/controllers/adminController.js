@@ -2,7 +2,6 @@ const Admin = require('../models/Admin');
 const Student = require('../models/Student');
 const Resource = require('../models/Resource');
 const Category = require('../models/Category');
-const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
@@ -32,6 +31,8 @@ if (
                 'pdf-' + Date.now() + '-' + file.originalname.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_')
         }
     });
+} else if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    storage = multer.memoryStorage();
 } else {
     storage = multer.diskStorage({
         destination: function (req, file, cb) {

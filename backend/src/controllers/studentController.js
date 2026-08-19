@@ -1,7 +1,6 @@
 const Student = require('../models/Student');
 const Resource = require('../models/Resource');
 const Category = require('../models/Category');
-const bcrypt = require('bcryptjs');
 
 // ─── Auth Controllers ─────────────────────────────────────────────────────────
 const signup = async (req, res) => {

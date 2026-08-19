@@ -5,7 +5,6 @@ const methodOverride = require('method-override');
 const cors = require('cors');
 const fs = require('fs');
 const MongoStore = require('connect-mongo');
-const { dbUri } = require('./dataBase/db');
 const mongoose = require('mongoose');
 const errorHandler = require('./services/errorHandler');
 
@@ -18,11 +17,7 @@ const rawFrontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.trim(
 
 const allowedOrigins = [
     'https://learn-app-ruby.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://localhost:4173',
-    'http://localhost:5174',
-    'http://127.0.0.1:5173'
+    'https://localhost:5173'
 ];
 
 if (rawFrontendUrl && !allowedOrigins.includes(rawFrontendUrl)) {
@@ -51,9 +46,13 @@ app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 app.use(express.static(path.join(__dirname, '../../frontend/public')));
 
 // ─── Ensure Uploads Directory ─────────────────────────────────────────────────
-const uploadDir = path.join(__dirname, '../../frontend/public/uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+try {
+    const uploadDir = path.join(__dirname, '../../frontend/public/uploads');
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+} catch (err) {
+    console.warn('Read-only filesystem detected, skipping local uploads dir creation.');
 }
 
 // ─── Session ──────────────────────────────────────────────────────────────────
@@ -96,16 +95,6 @@ app.use((req, res, next) => {
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api',       require('./routes/studentRoutes'));
 
-// ─── React SPA Fallback ───────────────────────────────────────────────────────
-app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.includes('.')) return next();
-    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'), (err) => {
-        if (err) {
-            res.status(404).send("Frontend build not found. Please run 'npm run build' in the frontend directory.");
-        }
-    });
-});
-
 // ─── Friendly 404 for Missing Uploads ────────────────────────────────────────
 app.get('/uploads/:filename', (req, res) => {
     res.status(404).send(`
@@ -115,6 +104,16 @@ app.get('/uploads/:filename', (req, res) => {
             <a href="javascript:history.back()" style="display:inline-block;margin-top:1rem;padding:0.6rem 1.4rem;background:#6366f1;color:white;border-radius:8px;text-decoration:none">← Go Back</a>
         </div>
     `);
+});
+
+// ─── React SPA Fallback ───────────────────────────────────────────────────────
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.includes('.')) return next();
+    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'), (err) => {
+        if (err) {
+            res.status(404).send("Frontend build not found. Please run 'npm run build' in the frontend directory.");
+        }
+    });
 });
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
